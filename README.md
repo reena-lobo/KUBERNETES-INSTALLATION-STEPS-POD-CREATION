@@ -382,10 +382,71 @@ Commercial support is available at
 
 
 
+//to access a pod outside of a Kubernetes cluster, you typically need to set up a Service, Ingress, or use a NodePort to expose the pod to external traffic. 
+Here's an example of the YAML code for creating a simple deployment, a NodePort Service, and a pod running an Nginx web server to expose it outside the cluster. Please note that this is a simplified example, and you should adapt it to your specific application and cluster configuration.
+
+Create a Deployment:
+vim deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: my-app
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      containers:
+      - name: my-app-container
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+        
+Apply this Deployment to your cluster:
+kubectl apply -f deployment.yaml
+
+Create a NodePort Service to expose the pod:
+vim service.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-app-service
+spec:
+  type: NodePort
+  selector:
+    app: my-app
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
 
 
+Apply this NodePort Service:
+kubectl apply -f service.yaml
 
  
+Get the NodePort assigned to the Service:
+You can either check the assigned NodePort using the following command:
+kubectl get svc
+
+NAME             TYPE       CLUSTER-IP     EXTERNAL-IP   PORT(S)        AGE
+my-app-service   NodePort   10.96.77.154   <none>        80:32722/TCP   44
+
+
+
+goto browser
+type ip add of instance:port
+//if failed go to security group and add inbound rule 
+custom tcp 32722(port that you got ) anywhere ipv4
+save
+and rerun
+u will logged in to nginx
 
 
 
