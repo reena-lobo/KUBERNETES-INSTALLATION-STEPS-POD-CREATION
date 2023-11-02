@@ -80,6 +80,312 @@ Commercial support is available at
 pod "my-pod" deleted
 root@ip-172-31-58-195:~# kubectl get pod
 No resources found in default namespace.
+ if we run taint command again then
+ root@ip-172-31-58-195:~# kubectl taint node ip-172-31-58-195 node-role.kubernetes.io/control-plane:NoSchedule-
+error: taint "node-role.kubernetes.io/control-plane:NoSchedule" not found
+//beacuse already we untainted it 
+
+
+//to get pods for specific namespcaes ex:kube-system namespace(name of name space)
+root@ip-172-31-58-195:~# kubectl get pod -n kube-system
+NAME                                       READY   STATUS    RESTARTS   AGE
+coredns-5dd5756b68-6xjs7                   1/1     Running   0          20h
+coredns-5dd5756b68-pkcrx                   1/1     Running   0          20h
+etcd-ip-172-31-58-195                      1/1     Running   0          20h
+kube-apiserver-ip-172-31-58-195            1/1     Running   0          20h
+kube-controller-manager-ip-172-31-58-195   1/1     Running   0          20h
+kube-proxy-shhdm                           1/1     Running   0          20h
+kube-scheduler-ip-172-31-58-195            1/1     Running   0          20h
+
+
+//another way to create a pod is by creating pod.yaml file
+A pod.yaml file is used to define a Kubernetes Pod, which is the smallest deployable unit in a Kubernetes cluster. Below is an example of the basic structure of a pod.yaml file:
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-pod
+  labels:
+    app: my-app
+spec:
+  containers:
+  - name: my-container
+    image: my-image:tag
+    ports:
+    - containerPort: 80
+apiVersion: Specifies the version of the Kubernetes API being used. In this case, it's v1, which is the API version for core Kubernetes objects like Pods.
+
+kind: Specifies the kind of Kubernetes object, which is Pod in this case.
+
+metadata: Contains metadata about the Pod, such as its name and labels. Labels are key-value pairs that can be used to organize and select Pods.
+
+spec: Describes the specification of the Pod.
+
+containers: This is an array of container definitions within the Pod.
+name: The name of the container.
+image: The container image to be used, specified in the format image:tag.
+ports: Optional. Specifies the ports to open on the container.
+containerPort: The port number the container is listening on.
+This is a minimal example of a pod.yaml file. You can further customize the Pod by adding more properties to the spec section, such as environment variables, volumes, resource requests and limits, security settings, and more, based on your specific requirements.
+
+To create a Pod using this pod.yaml file, you can use the kubectl apply command:
+kubectl apply -f pod.yaml
+
+
+root@ip-172-31-58-195:~# kubectl run pod3 --image=nginx --dry-run=client -o yaml>podbasic.yaml
+root@ip-172-31-58-195:~# kubectl apply -f podbasic.yaml
+pod/pod3 created
+root@ip-172-31-58-195:~# kubectl get pod
+NAME   READY   STATUS    RESTARTS   AGE
+pod1   1/1     Running   0          7m50s
+pod2   1/1     Running   0          5m3s
+pod3   1/1     Running   0          9s
+
+
+
+//now we have 3 pods access al three pods 
+first describe pod and get the ip address of that pod and then curl ipadress
+
+//
+root@ip-172-31-58-195:~# kubectl describe pod pod1
+Name:             pod1
+Namespace:        default
+Priority:         0
+Service Account:  default
+Node:             ip-172-31-58-195/172.31.58.195
+Start Time:       Thu, 02 Nov 2023 06:23:49 +0000
+Labels:           run=pod1
+Annotations:      <none>
+Status:           Running
+IP:               10.244.0.5
+IPs:
+  IP:  10.244.0.5
+Containers:
+  pod1:
+    Container ID:   containerd://e36941e6dc10d18bb769b2bda2132693540bb1529f92aff607ab4f3694839031
+    Image:          nginx
+    Image ID:       docker.io/library/nginx@sha256:775b948ed18e931cfe48c4664387162764dcf286303bbe02bd72703f72f17f02
+    Port:           <none>
+    Host Port:      <none>
+    State:          Running
+      Started:      Thu, 02 Nov 2023 06:23:50 +0000
+    Ready:          True
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-f84nl (ro)
+Conditions:
+  Type              Status
+  Initialized       True
+  Ready             True
+  ContainersReady   True
+  PodScheduled      True
+Volumes:
+  kube-api-access-f84nl:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    ConfigMapOptional:       <nil>
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age   From               Message
+  ----    ------     ----  ----               -------
+  Normal  Scheduled  27m   default-scheduler  Successfully assigned default/pod1 to ip-172-31-58-195
+  Normal  Pulling    27m   kubelet            Pulling image "nginx"
+  Normal  Pulled     27m   kubelet            Successfully pulled image "nginx" in 279ms (279ms including waiting)
+  Normal  Created    27m   kubelet            Created container pod1
+  Normal  Started    27m   kubelet            Started container pod1
+root@ip-172-31-58-195:~# curl 10.244.0.5
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+html { color-scheme: light dark; }
+body { width: 35em; margin: 0 auto;
+font-family: Tahoma, Verdana, Arial, sans-serif; }
+</style>
+</head>
+<body>
+<h1>Welcome to nginx!</h1>
+<p>If you see this page, the nginx web server is successfully installed and
+working. Further configuration is required.</p>
+
+<p>For online documentation and support please refer to
+<a href="http://nginx.org/">nginx.org</a>.<br/>
+Commercial support is available at
+<a href="http://nginx.com/">nginx.com</a>.</p>
+
+<p><em>Thank you for using nginx.</em></p>
+</body>
+</html>
+
+//running second pod
+root@ip-172-31-58-195:~# kubectl describe pod pod2
+Name:             pod2
+Namespace:        default
+Priority:         0
+Service Account:  default
+Node:             ip-172-31-58-195/172.31.58.195
+Start Time:       Thu, 02 Nov 2023 06:26:36 +0000
+Labels:           run=pod2
+Annotations:      <none>
+Status:           Running
+IP:               10.244.0.6
+IPs:
+  IP:  10.244.0.6
+Containers:
+  pod2:
+    Container ID:   containerd://63b7f37839b4f3863e84a88cbd2627d7b316b218699157c9f7d84c70a54fcbe4
+    Image:          nginx
+    Image ID:       docker.io/library/nginx@sha256:775b948ed18e931cfe48c4664387162764dcf286303bbe02bd72703f72f17f02
+    Port:           <none>
+    Host Port:      <none>
+    State:          Running
+      Started:      Thu, 02 Nov 2023 06:26:37 +0000
+    Ready:          True
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-49nh7 (ro)
+Conditions:
+  Type              Status
+  Initialized       True
+  Ready             True
+  ContainersReady   True
+  PodScheduled      True
+Volumes:
+  kube-api-access-49nh7:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    ConfigMapOptional:       <nil>
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age   From               Message
+  ----    ------     ----  ----               -------
+  Normal  Scheduled  26m   default-scheduler  Successfully assigned default/pod2 to ip-172-31-58-195
+  Normal  Pulling    25m   kubelet            Pulling image "nginx"
+  Normal  Pulled     25m   kubelet            Successfully pulled image "nginx" in 187ms (187ms including waiting)
+  Normal  Created    25m   kubelet            Created container pod2
+  Normal  Started    25m   kubelet            Started container pod2
+
+root@ip-172-31-58-195:~# curl 10.244.0.6
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+html { color-scheme: light dark; }
+body { width: 35em; margin: 0 auto;
+font-family: Tahoma, Verdana, Arial, sans-serif; }
+</style>
+</head>
+<body>
+<h1>Welcome to nginx!</h1>
+<p>If you see this page, the nginx web server is successfully installed and
+working. Further configuration is required.</p>
+
+<p>For online documentation and support please refer to
+<a href="http://nginx.org/">nginx.org</a>.<br/>
+Commercial support is available at
+<a href="http://nginx.com/">nginx.com</a>.</p>
+
+<p><em>Thank you for using nginx.</em></p>
+</body>
+</html>
+
+//running 3rd pod
+root@ip-172-31-58-195:~# kubectl describe pod pod3
+Name:             pod3
+Namespace:        default
+Priority:         0
+Service Account:  default
+Node:             ip-172-31-58-195/172.31.58.195
+Start Time:       Thu, 02 Nov 2023 06:31:31 +0000
+Labels:           run=pod3
+Annotations:      <none>
+Status:           Running
+IP:               10.244.0.7
+IPs:
+  IP:  10.244.0.7
+Containers:
+  pod3:
+    Container ID:   containerd://4f81cc5f097a7a42626c6b4ca5571a01fa5619711a594a94457b356dcfa8a891
+    Image:          nginx
+    Image ID:       docker.io/library/nginx@sha256:775b948ed18e931cfe48c4664387162764dcf286303bbe02bd72703f72f17f02
+    Port:           <none>
+    Host Port:      <none>
+    State:          Running
+      Started:      Thu, 02 Nov 2023 06:31:31 +0000
+    Ready:          True
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-fql9d (ro)
+Conditions:
+  Type              Status
+  Initialized       True
+  Ready             True
+  ContainersReady   True
+  PodScheduled      True
+Volumes:
+  kube-api-access-fql9d:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    ConfigMapOptional:       <nil>
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age   From               Message
+  ----    ------     ----  ----               -------
+  Normal  Scheduled  21m   default-scheduler  Successfully assigned default/pod3 to ip-172-31-58-195
+  Normal  Pulling    21m   kubelet            Pulling image "nginx"
+  Normal  Pulled     21m   kubelet            Successfully pulled image "nginx" in 145ms (145ms including waiting)
+  Normal  Created    21m   kubelet            Created container pod3
+  Normal  Started    21m   kubelet            Started container pod3
+root@ip-172-31-58-195:~# curl 10.244.0.7
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+html { color-scheme: light dark; }
+body { width: 35em; margin: 0 auto;
+font-family: Tahoma, Verdana, Arial, sans-serif; }
+</style>
+</head>
+<body>
+<h1>Welcome to nginx!</h1>
+<p>If you see this page, the nginx web server is successfully installed and
+working. Further configuration is required.</p>
+
+<p>For online documentation and support please refer to
+<a href="http://nginx.org/">nginx.org</a>.<br/>
+Commercial support is available at
+<a href="http://nginx.com/">nginx.com</a>.</p>
+
+<p><em>Thank you for using nginx.</em></p>
+</body>
+</html>
+
+
+
+
+
+
+ 
 
 
 
